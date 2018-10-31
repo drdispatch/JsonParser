@@ -34,11 +34,11 @@ type
 procedure Error(var JsonParser: TJsonParser; Msg: TJsonString);
 var
   ErrorMsg: TJsonString;
-  N: Integer;
+  N: integer;
 begin
   ErrorMsg := Format('Error: "%s". Position: %d. Text: "%s"', [Msg, JsonParser.At, JsonParser.Text]);
-  N := Length(JsonParser.Output.Errors);
-  SetLength(JsonParser.Output.Errors, N + 1);
+  N := GetArrayLength(JsonParser.Output.Errors);
+  SetArrayLength(JsonParser.Output.Errors, N + 1);
   JsonParser.Output.Errors[N] := ErrorMsg;
 end;
 
@@ -58,7 +58,7 @@ begin
     Exit;
   end;
   JsonParser.Ch := JsonParser.Text[JsonParser.At];
-  Inc(JsonParser.At);
+  JsonParser.At := JsonParser.At + 1;
   Result := JsonParser.Ch;
 end;
 
@@ -209,7 +209,7 @@ function Array_(var JsonParser: TJsonParser; Value: TJsonValueParser): TJsonArra
 var
   N: Integer;
 begin
-  SetLength(Result, 0); // Empty array
+  SetArrayLength(Result, 0); // Empty array
   N := 0;
   if JsonParser.Ch = '[' then
   begin
@@ -222,8 +222,8 @@ begin
     end;
     while JsonParser.Ch <> #0 do
     begin
-      Inc(N);
-      SetLength(Result, N);
+      N := N + 1;
+      SetArrayLength(Result, N);
       Result[N - 1] := Value(JsonParser);
       White(JsonParser);
       if JsonParser.Ch = ']' then
@@ -244,7 +244,7 @@ var
   Key: TJsonString;
   I, N: Integer;
 begin
-  SetLength(Result, 0); // Empty object
+  SetArrayLength(Result, 0); // Empty object
   N := 0;
   if JsonParser.Ch = '{' then
   begin
@@ -265,8 +265,8 @@ begin
         if Key = Result[I].Key then
           Error(JsonParser, 'Duplicate key "' + Key + '"');
       end;
-      Inc(N);
-      SetLength(Result, N);
+      N := N + 1;
+      SetArrayLength(Result, N);
       Result[N - 1].Key := Key;
       Result[N - 1].Value := Value(JsonParser);
       White(JsonParser);
@@ -291,42 +291,42 @@ begin
   Result.Index := -1;
   White(JsonParser);
   case JsonParser.Ch of
-    '-', '0'..'9':
+    '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
     begin
-      N := Length(JsonParser.Output.Numbers);
-      SetLength(JsonParser.Output.Numbers, N + 1);
+      N := GetArrayLength(JsonParser.Output.Numbers);
+      SetArrayLength(JsonParser.Output.Numbers, N + 1);
       JsonParser.Output.Numbers[N] := Number(JsonParser);
       Result.Kind := JVKNumber;
       Result.Index := N;
     end;
     '"':
     begin
-      N := Length(JsonParser.Output.Strings);
-      SetLength(JsonParser.Output.Strings, N + 1);
+      N := GetArrayLength(JsonParser.Output.Strings);
+      SetArrayLength(JsonParser.Output.Strings, N + 1);
       JsonParser.Output.Strings[N] := String_(JsonParser);
       Result.Kind := JVKString;
       Result.Index := N;
     end;
     't', 'f', 'n':
     begin
-      N := Length(JsonParser.Output.Words);
-      SetLength(JsonParser.Output.Words, N + 1);
+      N := GetArrayLength(JsonParser.Output.Words);
+      SetArrayLength(JsonParser.Output.Words, N + 1);
       JsonParser.Output.Words[N] := Word_(JsonParser);
       Result.Kind := JVKWord;
       Result.Index := N;
     end;
     '[':
     begin
-      N := Length(JsonParser.Output.Arrays);
-      SetLength(JsonParser.Output.Arrays, N + 1);
+      N := GetArrayLength(JsonParser.Output.Arrays);
+      SetArrayLength(JsonParser.Output.Arrays, N + 1);
       JsonParser.Output.Arrays[N] := Array_(JsonParser, @Value);
       Result.Kind := JVKArray;
       Result.Index := N;
     end;
     '{':
     begin
-      N := Length(JsonParser.Output.Objects);
-      SetLength(JsonParser.Output.Objects, N + 1);
+      N := GetArrayLength(JsonParser.Output.Objects);
+      SetArrayLength(JsonParser.Output.Objects, N + 1);
       JsonParser.Output.Objects[N] := Object_(JsonParser, @Value);
       Result.Kind := JVKObject;
       Result.Index := N;
@@ -354,12 +354,12 @@ begin
   JsonParser.At := 0;
   JsonParser.Ch := #0;
   JsonParser.Text := '';
-  SetLength(JsonParser.Output.Numbers, 0);
-  SetLength(JsonParser.Output.Strings, 0);
-  SetLength(JsonParser.Output.Words, 0);
-  SetLength(JsonParser.Output.Arrays, 0);
-  SetLength(JsonParser.Output.Objects, 0);
-  SetLength(JsonParser.Output.Errors, 0);
+  SetArrayLength(JsonParser.Output.Numbers, 0);
+  SetArrayLength(JsonParser.Output.Strings, 0);
+  SetArrayLength(JsonParser.Output.Words, 0);
+  SetArrayLength(JsonParser.Output.Arrays, 0);
+  SetArrayLength(JsonParser.Output.Objects, 0);
+  SetArrayLength(JsonParser.Output.Errors, 0);
 end;
 
 function IndentString(Indent: Integer): TJsonString;
@@ -382,9 +382,9 @@ begin
   IS0 := IndentString(Indent);
   IS1 := IndentString(Indent + 1);
   Lines.Add(IS0 + '[');
-  for I := 0 to Length(Output.Arrays[Index]) - 1 do
+  for I := 0 to GetArrayLength(Output.Arrays[Index]) - 1 do
   begin
-    if I < Length(Output.Arrays[Index]) - 1 then
+    if I < GetArrayLength(Output.Arrays[Index]) - 1 then
       Comma := ','
     else
       Comma := '';
@@ -421,9 +421,9 @@ begin
   IS0 := IndentString(Indent);
   IS1 := IndentString(Indent + 1);
   Lines.Add(IS0 + '{');
-  for I := 0 to Length(Output.Objects[Index]) - 1 do
+  for I := 0 to GetArrayLength(Output.Objects[Index]) - 1 do
   begin
-    if I < Length(Output.Objects[Index]) - 1 then
+    if I < GetArrayLength(Output.Objects[Index]) - 1 then
       Comma := ','
     else
       Comma := '';
