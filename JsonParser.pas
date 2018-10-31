@@ -1,7 +1,7 @@
 type
   TJsonNumber = Double;
-  TJsonString = WideString;
-  TJsonChar = WideChar;
+  TJsonString = string;
+  TJsonChar = char;
   TJsonWord = (JWUnknown, JWTrue, JWFalse, JWNull);
   TJsonValueKind = (JVKUnknown, JVKNumber, JVKString, JVKWord, JVKArray, JVKObject);
   TJsonValue = record
@@ -65,7 +65,7 @@ end;
 // Parse a number value.
 function Number(var JsonParser: TJsonParser): Double;
 var
-  S: WideString;
+  S: string;
 begin
   Result := 0;
   S := '';
@@ -336,7 +336,7 @@ begin
   end;
 end;
 
-procedure ParseJson(var JsonParser: TJsonParser; const Source: WideString);
+procedure ParseJson(var JsonParser: TJsonParser; const Source: string);
 begin
   if Source = '' then
     Exit;
